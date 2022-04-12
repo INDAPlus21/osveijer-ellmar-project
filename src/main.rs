@@ -1,0 +1,5 @@
+mod stuff;
+
+fn main() {
+    ()
+}
