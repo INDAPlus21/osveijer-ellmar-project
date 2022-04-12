@@ -1,6 +1,6 @@
 use std::ops::{Add, Sub, Index};
 
-const WIDTH: usize = 80; // window witdth
+pub const WIDTH: usize = 80; // window witdth
 const FOV: f32 = 3.14159 / 4.0;
 
 #[derive(Clone, Copy)]
@@ -40,29 +40,20 @@ impl Vector {
 		(self.x * self.x + self.y * self.y).sqrt()
 	}
 	
-//	fn is_hit(hunter: Self, target: Self, direction: Self) -> f32 {
-//		let mut scalar: f32 = 0.0;
-//
-//		while scalar < 100_000.0 {
-//			if (target - (hunter + direction.scalar_mul(scalar))).len() <= 0.1 {
-//				return scalar;
-//			}
-//			scalar += 0.1
-//		}
-//		return 100_000.0
-//	}
-
 	fn is_hit(player: Self, angle: Self, map: Map) -> Option<[usize; 2]> {
 		let mut step: f32 = 0.0;
 
-		while step > 23.0 {
+		loop {
 			
 			let new_location = player + angle.scalar_mul(step);
 
 			let x = new_location.x.round() as usize;
 			let y = new_location.y.round() as usize;
+			
+			if x > 15 || y > 15 {break;}
 
 			if map[y][x] {
+				//println!("{}, {}", x, y);
 				return Some([x, y])
 			}
 			step += 0.1
@@ -94,14 +85,14 @@ impl Add for Vector {
 }
 
 #[derive(Clone, Copy)]
-struct Player {
+pub struct Player {
 	x: f32,
 	y: f32,
 	angle: f32,
 }
 
 impl Player {
-	fn new(x: f32, y: f32, angle: f32) -> Self {
+	pub fn new(x: f32, y: f32, angle: f32) -> Self {
 		Self {x, y, angle}
 	}
 
@@ -112,11 +103,15 @@ impl Player {
 }
 
 #[derive(Clone, Copy)]
-struct Map {
+pub struct Map {
 	map: [[bool; 16]; 16]
 }
 
 impl Map {
+	pub fn new(arr: [&str; 16]) -> Self {
+		Self::make_map(arr)
+	}
+
 	fn make_map(arr: [&str; 16]) -> Self {
 
 		let mut map = [[false; 16]; 16];
@@ -141,7 +136,7 @@ impl Index<usize> for Map {
 	}
 }
 
-fn render(player: Player, map: Map) -> [f32; WIDTH] {
+pub fn render(player: Player, map: Map) -> [f32; WIDTH] {
 	let mut result = [0.0; WIDTH];
 	let step = FOV / (WIDTH as f32);
 
@@ -152,12 +147,12 @@ fn render(player: Player, map: Map) -> [f32; WIDTH] {
 
 	for idx in 0..WIDTH {
 		let angle_vec = Vector::from_angle(angle_current);
-
 		if let Some(wall) = Vector::is_hit(player_vec, angle_vec, map) {
 			result[idx] = (player_vec - Vector::new(wall[0] as f32, wall[1] as f32)).len();
 		} else {
 			result[idx] = 100.0;
 		}
+		angle_current -= step;
 	}
 	result
 }
