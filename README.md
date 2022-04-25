@@ -1,13 +1,18 @@
 # osveijer-ellmar-project
+A first person game made in rust and inspired by the original doom.
 
-## Specification
+### What will be included
 
-### Namning convention
+The project will include a graphics engine and some kind of movement system. Once this is completed further functions can be added such as shooting, enemies, different leveles or different objectives such as gathering keys. 
 
-### What we will do
+### Plausibility
 
-We will make a first person game inspired by the original doom in rust. It will include a graphics engine and some kind of movement system.
+This should not be to hard to complete since the graphics engine is very simple and the movment only includes travel in two dimensions and rotation along one axis.
 
-This should not be to hard to complete since the graphics engine is very simple. The project has many possible functions to be added such as shooting, enemies, different leveles or different objectives such as gathering keys. 
+### Feature progress
 
-### Who is going to do what
+Features that are planed and currently being developed can be view on the [project board](https://github.com/INDAPlus21/osveijer-ellmar-project/projects/1?query=is%3Aopen+sort%3Aupdated-desc).
+
+### Milestones
+
+Project will be divided according to the [milestones](https://github.com/INDAPlus21/osveijer-ellmar-project/milestones).
