@@ -94,10 +94,6 @@ pub fn render() {
 			} else {
 				*pixel = 0;
 			}
-			if idx % 1000 == 0 {
-				println!("{}", dist);
-			}
-
 		}
 
 		// We unwrap here as we want this code to exit if it fails. Real applications may want to handle this in a different way
