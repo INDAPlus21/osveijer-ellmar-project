@@ -56,10 +56,10 @@ pub fn render() {
 		for t in keys {
 			match t {
 				Key::Left => {
-					player.rotate(stuff::Direction::Left, 0.05); // TODO: is angle fine?
+					player.rotate(stuff::Direction::Left, 0.1); // TODO: is angle fine?
 				},
 				Key::Right => {
-					player.rotate(stuff::Direction::Right, 0.05);
+					player.rotate(stuff::Direction::Right, 0.1);
 				},
 				_ => {()}
 			}
@@ -89,10 +89,13 @@ pub fn render() {
 
 			let dist = data[column];
 
-			if row < dist as usize * 50 {
-				*pixel = 0;
+			if dist < 6.0 && ((dist / 3.0) * (HEIGHT / 2) as f32) < row as f32 {
+				*pixel = dist.round() as u32 * 100 + 100000;
 			} else {
-				*pixel = dist.round() as u32 * 100;
+				*pixel = 0;
+			}
+			if idx % 1000 == 0 {
+				println!("{}", dist);
 			}
 
 		}
