@@ -1,42 +1,50 @@
 use std::ops::{Add, Sub, Index};
 
-pub const WIDTH: usize = 80; // window witdth
+pub const WIDTH: usize = 500; // window witdth
 const FOV: f32 = 3.14159 / 4.0;
 
 #[derive(Clone, Copy)]
-struct Vector {
+pub struct Vector {
 	x: f32,
 	y: f32
 }
 
 impl Vector {
-	fn new(x: f32, y: f32) -> Self {
+	pub fn new(x: f32, y: f32) -> Self {
 		Self{x, y}
+	}
+	
+	pub fn get_x(&self) -> f32 {
+		self.x
+	}
+
+	pub fn get_y(&self) -> f32 {
+		self.y
 	}
 
 	// create vector of unit length representing angle in radians ( 0 = 03:00, pi = 09:00)
-	fn from_angle(angle: f32) -> Self {
+	pub fn from_angle(angle: f32) -> Self {
 		Self {
 			x: angle.cos(),
 			y: angle.sin(),
 		}
 	}
 	
-	fn scalar_mul(&self, scalar: f32) -> Self {
+	pub fn scalar_mul(&self, scalar: f32) -> Self {
 		Self {
 			x: self.x * scalar,
 			y: self.y * scalar
 		}
 	}
 	
-	fn scalar_div(&self, scalar: f32) -> Self {
+	pub fn scalar_div(&self, scalar: f32) -> Self {
 		Self {
 			x: self.x / scalar,
 			y: self.y / scalar
 		}
 	}
 
-	fn len(&self) -> f32 {
+	pub fn len(&self) -> f32 {
 		(self.x * self.x + self.y * self.y).sqrt()
 	}
 	
