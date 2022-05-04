@@ -16,3 +16,8 @@ Features that are planed and currently being developed can be view on the [proje
 ### Milestones
 
 Project will be divided according to the [milestones](https://github.com/INDAPlus21/osveijer-ellmar-project/milestones).
+
+
+### Progress
+Graphics and movement as of 4th may:
+![](img/ezgif.com-gif-maker.gif)
