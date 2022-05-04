@@ -1,50 +1,60 @@
-use std::ops::{Add, Sub, Index};
+use std::ops::{Add, Sub, Index, AddAssign, SubAssign};
 
 pub const WIDTH: usize = 500; // window witdth
 const FOV: f32 = 3.14159 / 4.0;
+const PI: f32 = 3.14159;
 
 #[derive(Clone, Copy)]
-pub struct Vector {
+
+pub enum Direction {
+	Forward,
+	Backward,
+	Right,
+	Left,
+}
+
+#[derive(Copy, Clone)]
+struct Vector {
 	x: f32,
 	y: f32
 }
 
 impl Vector {
-	pub fn new(x: f32, y: f32) -> Self {
+	fn new(x: f32, y: f32) -> Self {
 		Self{x, y}
 	}
 	
-	pub fn get_x(&self) -> f32 {
+	fn get_x(&self) -> f32 {
 		self.x
 	}
 
-	pub fn get_y(&self) -> f32 {
+	fn get_y(&self) -> f32 {
 		self.y
 	}
 
 	// create vector of unit length representing angle in radians ( 0 = 03:00, pi = 09:00)
-	pub fn from_angle(angle: f32) -> Self {
+	fn from_angle(angle: f32) -> Self {
 		Self {
 			x: angle.cos(),
 			y: angle.sin(),
 		}
 	}
 	
-	pub fn scalar_mul(&self, scalar: f32) -> Self {
+	fn scalar_mul(&self, scalar: f32) -> Self {
 		Self {
 			x: self.x * scalar,
 			y: self.y * scalar
 		}
 	}
 	
-	pub fn scalar_div(&self, scalar: f32) -> Self {
+	fn scalar_div(&self, scalar: f32) -> Self {
 		Self {
 			x: self.x / scalar,
 			y: self.y / scalar
 		}
 	}
 
-	pub fn len(&self) -> f32 {
+	fn len(&self) -> f32 {
 		(self.x * self.x + self.y * self.y).sqrt()
 	}
 	
@@ -92,21 +102,73 @@ impl Add for Vector {
 	}
 }
 
+impl AddAssign for Vector {
+	fn add_assign(&mut self, rhs: Self) {
+		*self = *self + rhs;
+	}
+}
+
+impl SubAssign for Vector {
+	fn sub_assign(&mut self, rhs: Self) {
+		*self = *self - rhs;
+	}
+}
+
 #[derive(Clone, Copy)]
 pub struct Player {
-	x: f32,
-	y: f32,
+	pos: Vector,
 	angle: f32,
 }
 
 impl Player {
 	pub fn new(x: f32, y: f32, angle: f32) -> Self {
-		Self {x, y, angle}
+		let pos = Vector::new(x, y);
+		Self {pos, angle}
 	}
 
 	/// return x, y, angle
 	fn get_pos(&self) -> (f32, f32, f32) {
-		(self.x, self.y, self.angle)
+		(self.pos.get_x(), self.pos.get_y(), self.angle)
+	}
+	
+	pub fn rotate(&mut self, dir: Direction, angle: f32) {
+		match dir {
+			Direction::Left => {
+				self.angle += angle;
+				if self.angle > PI * 2.0 {
+					self.angle -= PI * 2.0;
+				}
+			},
+			Direction::Right => {
+				self.angle -= angle;
+				if self.angle < 0.0 {
+					self.angle += PI * 2.0;
+				}
+			}
+			_ => {
+				panic!("direction of rotation must be left or right");
+			}
+		}
+	}
+
+	pub fn mv(&mut self, dir: Direction) {
+		
+		// factor with which to divide direction vector with
+		let factor = 10.0; // TODO: is this fine?
+		match dir {
+			Direction::Forward => {
+				self.pos += Vector::from_angle(self.angle).scalar_div(factor);
+			},
+			Direction::Left => {
+				self.pos += Vector::from_angle(self.angle + PI / 2.0).scalar_div(factor);
+			}
+			Direction::Backward => {
+				self.pos -= Vector::from_angle(self.angle).scalar_div(factor);
+			}
+			Direction::Right => {
+				self.pos += Vector::from_angle(self.angle - PI / 2.0).scalar_div(factor);
+			}
+		}
 	}
 }
 

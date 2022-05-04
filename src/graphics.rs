@@ -44,8 +44,8 @@ pub fn render() {
 	// Limit to max ~60 fps update rate
 	window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
 
-	let mut angle = PI / 2.0;
-	let mut position = stuff::Vector::new(2.0, 2.0);
+	let angle = PI / 2.0;
+	let mut player = stuff::Player::new(2.0, 2.0, angle);
 
 	while window.is_open() && !window.is_key_down(Key::Escape) {
 		
@@ -53,42 +53,34 @@ pub fn render() {
 
 		// arrows and wasd are matched seperately, so that the player can move
 		// and look at the same time
-		// TODO: functions for movement!!
 		for t in keys {
 			match t {
 				Key::Left => {
-					angle += 0.05;
-					if angle > 3.14159 * 2.0 {
-						angle = angle - 3.14159 * 2.0;
-					}
+					player.rotate(stuff::Direction::Left, 0.05); // TODO: is angle fine?
 				},
 				Key::Right => {
-					angle -= 0.05;
-					if angle < -3.14159 * 2.0 {
-						angle = angle + 3.14159 * 2.0;
-					}
+					player.rotate(stuff::Direction::Right, 0.05);
 				},
 				_ => {()}
 			}
 			
 			match t {
 				Key::W => {
-					position = position + stuff::Vector::from_angle(angle).scalar_div(10.0);
+					player.mv(stuff::Direction::Forward);
 				},
 				Key::A => {
-					position = position + stuff::Vector::from_angle(angle + PI / 2.0).scalar_div(10.0);
+					player.mv(stuff::Direction::Left);
 				}
 				Key::S => {
-					position = position - stuff::Vector::from_angle(angle).scalar_div(10.0);
+					player.mv(stuff::Direction::Backward);
 				}
 				Key::D => {
-					position = position + stuff::Vector::from_angle(angle - PI / 2.0).scalar_div(10.0);
+					player.mv(stuff::Direction::Right);
 				}
 				_ => ()
 			}
 		}
 
-		let player = stuff::Player::new(position.get_x(), position.get_y(), angle);
 		let data = stuff::render(player, map);
 
 		for (idx, pixel) in buffer.iter_mut().enumerate() {
