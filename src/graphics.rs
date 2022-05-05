@@ -66,16 +66,16 @@ pub fn render() {
 			
 			match t {
 				Key::W => {
-					player.mv(stuff::Direction::Forward);
+					player.mv(stuff::Direction::Forward, map);
 				},
 				Key::A => {
-					player.mv(stuff::Direction::Left);
+					player.mv(stuff::Direction::Left, map);
 				}
 				Key::S => {
-					player.mv(stuff::Direction::Backward);
+					player.mv(stuff::Direction::Backward, map);
 				}
 				Key::D => {
-					player.mv(stuff::Direction::Right);
+					player.mv(stuff::Direction::Right, map);
 				}
 				_ => ()
 			}

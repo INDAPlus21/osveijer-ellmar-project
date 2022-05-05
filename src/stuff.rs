@@ -57,8 +57,12 @@ impl Vector {
 	fn len(&self) -> f32 {
 		(self.x * self.x + self.y * self.y).sqrt()
 	}
+
+	fn dot(a: Self, b: Self) -> f32 {
+		a.x * b.x + a.y * b.y
+	}
 	
-	fn is_hit(player: Self, angle: Self, map: Map) -> Option<[usize; 2]> {
+	fn is_hit(player: Self, angle: Self, map: Map) -> Option<[f32; 2]> {
 		let mut step: f32 = 0.0;
 
 		loop {
@@ -72,9 +76,43 @@ impl Vector {
 
 			if map[y][x] {
 				//println!("{}, {}", x, y);
-				return Some([x, y])
+				let wallvec = Vector::new(x as f32,y as f32);
+				let dir = player - wallvec;
+				if dir.y > 0.0 {
+					if let Some(hitpos) = Vector::intersect(Vector::new(0.0,1.0), wallvec + Vector::new(0.0, 0.5), angle, player) {
+						return Some([hitpos.x, hitpos.y]);
+					}
+				}
+				else {
+					if let Some(hitpos) = Vector::intersect(Vector::new(0.0,-1.0), wallvec + Vector::new(0.0, -0.5), angle, player) {
+						return Some([hitpos.x, hitpos.y]);
+					}
+				}
+				if dir.x < 0.0 {
+					if let Some(hitpos) = Vector::intersect(Vector::new(-1.0,0.0), wallvec + Vector::new(-0.5, 0.0), angle, player) {
+						return Some([hitpos.x, hitpos.y])
+					}
+				}
+				else {
+					if let Some(hitpos) = Vector::intersect(Vector::new(1.0,0.0), wallvec + Vector::new(0.5, 0.0), angle, player) {
+						return Some([hitpos.x, hitpos.y])
+					}
+				}
 			}
 			step += 0.1
+		}
+		None
+	}
+
+	fn intersect(normal: Self, center: Self, angle: Self, player: Self) -> Option<Self> {
+		let denominator = Vector::dot(normal, angle);
+
+		if denominator != 0.0 {
+			let t = (Vector::dot(normal, center) - Vector::dot(normal, player)) / denominator;
+			let p = player + angle.scalar_mul(t);
+			if (p - center).len() < 0.5 {
+				return Some(p)
+			}
 		}
 		None
 	}
@@ -151,24 +189,37 @@ impl Player {
 		}
 	}
 
-	pub fn mv(&mut self, dir: Direction) {
+	pub fn mv(&mut self, dir: Direction, map: Map) {
 		
 		// factor with which to divide direction vector with
 		let factor = 10.0; // TODO: is this fine?
+		// movement Vector
+		let mut movement: Vector = Vector::new(0.0,0.0);
+		// get movement
 		match dir {
 			Direction::Forward => {
-				self.pos += Vector::from_angle(self.angle).scalar_div(factor);
+				movement += Vector::from_angle(self.angle).scalar_div(factor);
 			},
 			Direction::Left => {
-				self.pos += Vector::from_angle(self.angle + PI / 2.0).scalar_div(factor);
+				movement += Vector::from_angle(self.angle + PI / 2.0).scalar_div(factor);
 			}
 			Direction::Backward => {
-				self.pos -= Vector::from_angle(self.angle).scalar_div(factor);
+				movement -= Vector::from_angle(self.angle).scalar_div(factor);
 			}
 			Direction::Right => {
-				self.pos += Vector::from_angle(self.angle - PI / 2.0).scalar_div(factor);
+				movement += Vector::from_angle(self.angle - PI / 2.0).scalar_div(factor);
 			}
 		}
+		// make sure not going through walls
+		if let Some(wall) = Vector::is_hit(self.pos, movement, map) {
+			if (self.pos - Vector::new(wall[0] as f32, wall[1] as f32)).len() < movement.len() {
+				movement = movement.scalar_div(movement.len()).scalar_mul((self.pos - Vector::new(wall[0] as f32, wall[1] as f32)).len()-0.05);
+			}
+		}
+
+		println!("{} {}", self.pos.x, self.pos.y);
+
+		self.pos += movement; 
 	}
 }
 
@@ -218,7 +269,7 @@ pub fn render(player: Player, map: Map) -> [f32; WIDTH] {
 	for idx in 0..WIDTH {
 		let angle_vec = Vector::from_angle(angle_current);
 		if let Some(wall) = Vector::is_hit(player_vec, angle_vec, map) {
-			result[idx] = (player_vec - Vector::new(wall[0] as f32, wall[1] as f32)).len();
+			result[idx] = (player_vec - Vector::new(wall[0], wall[1])).len();
 		} else {
 			result[idx] = 100.0;
 		}
