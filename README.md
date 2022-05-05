@@ -11,7 +11,7 @@ This should not be to hard to complete since the graphics engine is very simple 
 
 ### Feature progress
 
-Features that are planed and currently being developed can be view on the [project board](https://github.com/INDAPlus21/osveijer-ellmar-project/projects/1?query=is%3Aopen+sort%3Aupdated-desc).
+Features that are planed and currently being developed can be view on the [project boards](https://github.com/INDAPlus21/osveijer-ellmar-project/projects/1?query=is%3Aopen+sort%3Aupdated-desc).
 
 ### Milestones
 
