@@ -22,5 +22,5 @@ Project will be divided according to the [milestones](https://github.com/INDAPlu
 Graphics and movement as of 4th may:
 ![](img/may_4.gif)
 
-Graphics and movement as of 6th may:
+6th may, graphics improved, collision mechanics added:
 ![](img/may_6.gif)
