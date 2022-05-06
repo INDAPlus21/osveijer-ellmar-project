@@ -20,4 +20,7 @@ Project will be divided according to the [milestones](https://github.com/INDAPlu
 
 ### Progress
 Graphics and movement as of 4th may:
-![](img/ezgif.com-gif-maker.gif)
+![](img/may_4.gif)
+
+Graphics and movement as of 6th may:
+![](img/may_6.gif)
