@@ -62,8 +62,9 @@ impl Vector {
 		a.x * b.x + a.y * b.y
 	}
 	
-	fn is_hit(player: Self, angle: Self, map: Map) -> Option<[f32; 3]> {
+	fn is_hit(player: Self, angle: Self, map: Map) -> Option<[f32; 4]> {
 		let mut step: f32 = 0.0;
+		let mut key: f32 = 0.0;
 
 		loop {
 			
@@ -74,32 +75,35 @@ impl Vector {
 			
 			if x > 15 || y > 15 {break;}
 
-			if map[y][x] {
+			if map[y][x][0] {
 				//println!("{}, {}", x, y);
 				let wallvec = Vector::new(x as f32,y as f32);
 				let dir = player - wallvec;
 				if dir.y > 0.0 {
 					if let Some(hitdata) = Vector::intersect(Vector::new(0.0,1.0), wallvec + Vector::new(0.0, 0.5), angle, player) {
-						return Some([hitdata.0.x, hitdata.0.y, hitdata.1]);
+						return Some([hitdata.0.x, hitdata.0.y, hitdata.1, key]);
 					}
 				}
 				else {
 					if let Some(hitdata) = Vector::intersect(Vector::new(0.0,-1.0), wallvec + Vector::new(0.0, -0.5), angle, player) {
-						return Some([hitdata.0.x, hitdata.0.y, hitdata.1]);
+						return Some([hitdata.0.x, hitdata.0.y, hitdata.1, key]);
 					}
 				}
 				if dir.x < 0.0 {
 					if let Some(hitdata) = Vector::intersect(Vector::new(-1.0,0.0), wallvec + Vector::new(-0.5, 0.0), angle, player) {
-						return Some([hitdata.0.x, hitdata.0.y, hitdata.1]);
+						return Some([hitdata.0.x, hitdata.0.y, hitdata.1, key]);
 					}
 				}
 				else {
 					if let Some(hitdata) = Vector::intersect(Vector::new(1.0,0.0), wallvec + Vector::new(0.5, 0.0), angle, player) {
-						return Some([hitdata.0.x, hitdata.0.y, hitdata.1]);
+						return Some([hitdata.0.x, hitdata.0.y, hitdata.1, key]);
 					}
 				}
+			} else if map[x][y][1] {
+				key = (player - Vector::new(x as f32, y as f32)).len();
 			}
-			step += 0.1
+			else if x == 0 && y == 0 {break;}
+			step += 0.05
 		}
 		None
 	}
@@ -225,7 +229,7 @@ impl Player {
 
 #[derive(Clone, Copy)]
 pub struct Map {
-	map: [[bool; 16]; 16]
+	map: [[[bool; 2]; 16]; 16]
 }
 
 impl Map {
@@ -235,12 +239,14 @@ impl Map {
 
 	fn make_map(arr: [&str; 16]) -> Self {
 
-		let mut map = [[false; 16]; 16];
+		let mut map = [[[false; 2]; 16]; 16];
 
 		for (outer, arr) in arr.iter().enumerate() {
 			for (inner, char) in arr.chars().enumerate() {
 				if char == '#' {
-					map[outer][inner] = true;
+					map[outer][inner][0] = true;
+				} else if char == '@' {
+					map[outer][inner][1] = true;
 				}
 			}
 		}
@@ -250,15 +256,15 @@ impl Map {
 }
 
 impl Index<usize> for Map {
-	type Output = [bool; 16];
+	type Output = [[bool; 2]; 16];
 
 	fn index(&self, index: usize) -> &Self::Output {
 		&self.map[index]
 	}
 }
 
-pub fn render(player: Player, map: Map) -> [[f32;2]; WIDTH] {
-	let mut result = [[0.0;2]; WIDTH];
+pub fn render(player: Player, map: Map) -> [[f32;3]; WIDTH] {
+	let mut result = [[0.0;3]; WIDTH];
 	let step = FOV / (WIDTH as f32);
 
 	let (x, y, angle) = player.get_pos();
@@ -269,9 +275,9 @@ pub fn render(player: Player, map: Map) -> [[f32;2]; WIDTH] {
 	for idx in 0..WIDTH {
 		let angle_vec = Vector::from_angle(angle_current);
 		if let Some(hit) = Vector::is_hit(player_vec, angle_vec, map) {
-			result[idx] = [(player_vec - Vector::new(hit[0], hit[1])).len(), hit[2]];
+			result[idx] = [(player_vec - Vector::new(hit[0], hit[1])).len(), hit[2], hit[3]];
 		} else {
-			result[idx] = [100.0,0.0];
+			result[idx] = [100.0,0.0,0.0];
 		}
 		angle_current -= step;
 	}

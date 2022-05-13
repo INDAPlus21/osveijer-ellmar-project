@@ -23,7 +23,7 @@ pub fn render() {
 		"#......#.......#",
 		"#..............#",
 		"#......#########",
-		"#..............#",
+		"#.............@#",
 		"################",
 	];
 	
@@ -85,14 +85,16 @@ pub fn render() {
 		
 		let floor = from_u8_rgb(150, 150, 150);
 		let sky = from_u8_rgb(125, 150, 255);
+		let key = from_u8_rgb(200, 200, 20);
 
 		for (idx, pixel) in buffer.iter_mut().enumerate() {
 			let column = idx % WIDTH;
 			let row = (idx - (idx % HEIGHT)) / HEIGHT;
 
 			let dat = data[column];
-
-			if dat[0] < 15.0 && HEIGHT as f32 / 2.0 - (((3.0/dat[0]).atan() * HEIGHT as f32 * 4.0)/(2.0 * 3.14159)) < row as f32 && HEIGHT as f32 / 2.0 + (((5.0/dat[0]).atan() * HEIGHT as f32 * 4.0)/(2.0 * 3.14159)) > row as f32 {
+			if dat[2] != 0.0 && HEIGHT as f32 / 2.0 - (((1.0/dat[2]).atan() * HEIGHT as f32 * 4.0)/(2.0 * 3.14159)) < row as f32 && HEIGHT as f32 / 2.0 + (((1.0/dat[2]).atan() * HEIGHT as f32 * 4.0)/(2.0 * 3.14159)) > row as f32 {
+				*pixel = key;
+			} else if dat[0] < 15.0 && HEIGHT as f32 / 2.0 - (((3.0/dat[0]).atan() * HEIGHT as f32 * 4.0)/(2.0 * 3.14159)) < row as f32 && HEIGHT as f32 / 2.0 + (((5.0/dat[0]).atan() * HEIGHT as f32 * 4.0)/(2.0 * 3.14159)) > row as f32 {
 				*pixel = dat[1].round() as u32 * 100 + 16000000;
 			} else if HEIGHT / 2 < row {
 				*pixel = floor;
