@@ -62,7 +62,7 @@ impl Vector {
 		a.x * b.x + a.y * b.y
 	}
 	
-	fn is_hit(player: Self, angle: Self, map: Map) -> Option<[f32; 2]> {
+	fn is_hit(player: Self, angle: Self, map: Map) -> Option<[f32; 3]> {
 		let mut step: f32 = 0.0;
 
 		loop {
@@ -79,23 +79,23 @@ impl Vector {
 				let wallvec = Vector::new(x as f32,y as f32);
 				let dir = player - wallvec;
 				if dir.y > 0.0 {
-					if let Some(hitpos) = Vector::intersect(Vector::new(0.0,1.0), wallvec + Vector::new(0.0, 0.5), angle, player) {
-						return Some([hitpos.x, hitpos.y]);
+					if let Some(hitdata) = Vector::intersect(Vector::new(0.0,1.0), wallvec + Vector::new(0.0, 0.5), angle, player) {
+						return Some([hitdata.0.x, hitdata.0.y, hitdata.1]);
 					}
 				}
 				else {
-					if let Some(hitpos) = Vector::intersect(Vector::new(0.0,-1.0), wallvec + Vector::new(0.0, -0.5), angle, player) {
-						return Some([hitpos.x, hitpos.y]);
+					if let Some(hitdata) = Vector::intersect(Vector::new(0.0,-1.0), wallvec + Vector::new(0.0, -0.5), angle, player) {
+						return Some([hitdata.0.x, hitdata.0.y, hitdata.1]);
 					}
 				}
 				if dir.x < 0.0 {
-					if let Some(hitpos) = Vector::intersect(Vector::new(-1.0,0.0), wallvec + Vector::new(-0.5, 0.0), angle, player) {
-						return Some([hitpos.x, hitpos.y])
+					if let Some(hitdata) = Vector::intersect(Vector::new(-1.0,0.0), wallvec + Vector::new(-0.5, 0.0), angle, player) {
+						return Some([hitdata.0.x, hitdata.0.y, hitdata.1]);
 					}
 				}
 				else {
-					if let Some(hitpos) = Vector::intersect(Vector::new(1.0,0.0), wallvec + Vector::new(0.5, 0.0), angle, player) {
-						return Some([hitpos.x, hitpos.y])
+					if let Some(hitdata) = Vector::intersect(Vector::new(1.0,0.0), wallvec + Vector::new(0.5, 0.0), angle, player) {
+						return Some([hitdata.0.x, hitdata.0.y, hitdata.1]);
 					}
 				}
 			}
@@ -104,14 +104,14 @@ impl Vector {
 		None
 	}
 
-	fn intersect(normal: Self, center: Self, angle: Self, player: Self) -> Option<Self> {
+	fn intersect(normal: Self, center: Self, angle: Self, player: Self) -> Option<(Self, f32)> {
 		let denominator = Vector::dot(normal, angle);
 
 		if denominator != 0.0 {
 			let t = (Vector::dot(normal, center) - Vector::dot(normal, player)) / denominator;
 			let p = player + angle.scalar_mul(t);
 			if (p - center).len() < 0.5 {
-				return Some(p)
+				return Some((p, (denominator/(normal.len()*angle.len())).acos()))
 			}
 		}
 		None
@@ -257,8 +257,8 @@ impl Index<usize> for Map {
 	}
 }
 
-pub fn render(player: Player, map: Map) -> [f32; WIDTH] {
-	let mut result = [0.0; WIDTH];
+pub fn render(player: Player, map: Map) -> [[f32;2]; WIDTH] {
+	let mut result = [[0.0;2]; WIDTH];
 	let step = FOV / (WIDTH as f32);
 
 	let (x, y, angle) = player.get_pos();
@@ -268,10 +268,10 @@ pub fn render(player: Player, map: Map) -> [f32; WIDTH] {
 
 	for idx in 0..WIDTH {
 		let angle_vec = Vector::from_angle(angle_current);
-		if let Some(wall) = Vector::is_hit(player_vec, angle_vec, map) {
-			result[idx] = (player_vec - Vector::new(wall[0], wall[1])).len();
+		if let Some(hit) = Vector::is_hit(player_vec, angle_vec, map) {
+			result[idx] = [(player_vec - Vector::new(hit[0], hit[1])).len(), hit[2]];
 		} else {
-			result[idx] = 100.0;
+			result[idx] = [100.0,0.0];
 		}
 		angle_current -= step;
 	}

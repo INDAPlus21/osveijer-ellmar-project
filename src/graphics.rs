@@ -82,17 +82,22 @@ pub fn render() {
 		}
 
 		let data = stuff::render(player, map);
+		
+		let floor = from_u8_rgb(150, 150, 150);
+		let sky = from_u8_rgb(125, 150, 255);
 
 		for (idx, pixel) in buffer.iter_mut().enumerate() {
 			let column = idx % WIDTH;
 			let row = (idx - (idx % HEIGHT)) / HEIGHT;
 
-			let dist = data[column];
+			let dat = data[column];
 
-			if dist < 6.0 && ((dist / 3.0) * (HEIGHT / 2) as f32) < row as f32 {
-				*pixel = dist.round() as u32 * 100 + 100000;
+			if dat[0] < 15.0 && HEIGHT as f32 / 2.0 - (((3.0/dat[0]).atan() * HEIGHT as f32 * 4.0)/(2.0 * 3.14159)) < row as f32 && HEIGHT as f32 / 2.0 + (((5.0/dat[0]).atan() * HEIGHT as f32 * 4.0)/(2.0 * 3.14159)) > row as f32 {
+				*pixel = dat[1].round() as u32 * 100 + 16000000;
+			} else if HEIGHT / 2 < row {
+				*pixel = floor;
 			} else {
-				*pixel = 0;
+				*pixel = sky;
 			}
 		}
 
@@ -101,4 +106,10 @@ pub fn render() {
 			.update_with_buffer(&buffer, WIDTH, HEIGHT)
 			.unwrap();
 	}
+}
+
+// code for conversion from rgb values to minifb colors taken from the minifb documentation
+fn from_u8_rgb(r: u8, g: u8, b: u8) -> u32 {
+    let (r, g, b) = (r as u32, g as u32, b as u32);
+    (r << 16) | (g << 8) | b
 }
