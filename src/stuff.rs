@@ -237,10 +237,6 @@ impl Map {
 		Self::make_map(arr)
 	}
 
-	fn get_map(&self) -> [[[bool; 2]; 16]; 16] {
-		self.map
-	}
-
 	fn make_map(arr: [&str; 16]) -> Self {
 
 		let mut map = [[[false; 2]; 16]; 16];
@@ -296,12 +292,12 @@ pub fn minimap(map: Map, player: Player) -> String {
 
 	let mut buf = String::new();
 	
-	for (row_idx, row) in map.get_map().iter().enumerate() {
-		for (col_idx, col) in row.iter().enumerate() {
+	for row_idx in 0..16 {
+		for col_idx in 0..16 {
 			if (row_idx, col_idx) == (y, x) {
 				buf.push('8');
 			} else {
-				buf.push(match col {
+				buf.push(match map[row_idx][col_idx]{
 					[true, false] => '#',
 					[false, true] => '@',
 					[false, false] => '.',
