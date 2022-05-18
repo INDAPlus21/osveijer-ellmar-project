@@ -221,7 +221,7 @@ impl Player {
 			}
 		}
 
-		println!("{} {}", self.pos.x, self.pos.y);
+// 		println!("{} {}", self.pos.x, self.pos.y);
 
 		self.pos += movement; 
 	}
@@ -235,6 +235,10 @@ pub struct Map {
 impl Map {
 	pub fn new(arr: [&str; 16]) -> Self {
 		Self::make_map(arr)
+	}
+
+	fn get_map(&self) -> [[[bool; 2]; 16]; 16] {
+		self.map
 	}
 
 	fn make_map(arr: [&str; 16]) -> Self {
@@ -282,4 +286,31 @@ pub fn render(player: Player, map: Map) -> [[f32;3]; WIDTH] {
 		angle_current -= step;
 	}
 	result
+}
+
+
+pub fn minimap(map: Map, player: Player) -> String {
+	let (x, y, _) = player.get_pos();
+	let x: usize = x.round() as usize;
+	let y: usize = y.round() as usize;
+
+	let mut buf = String::new();
+	
+	for (row_idx, row) in map.get_map().iter().enumerate() {
+		for (col_idx, col) in row.iter().enumerate() {
+			if (row_idx, col_idx) == (y, x) {
+				buf.push('8');
+			} else {
+				buf.push(match col {
+					[true, false] => '#',
+					[false, true] => '@',
+					[false, false] => '.',
+					_ => '?'
+				})
+			}
+			
+		}
+		buf.push('\n')
+	}
+	buf
 }

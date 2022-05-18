@@ -9,8 +9,8 @@ const PI: f32 = 3.14159;
 
 pub fn render() {
 	let map_string = [
-		"#########.......",
-		"#...............",
+		"################",
+		"#..............#",
 		"#.......########",
 		"#..............#",
 		"#......##......#",
@@ -80,6 +80,9 @@ pub fn render() {
 				_ => ()
 			}
 		}
+
+		println!("{}\n", stuff::minimap(map, player));
+
 
 		let data = stuff::render(player, map);
 		
