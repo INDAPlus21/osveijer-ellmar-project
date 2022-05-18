@@ -1,16 +1,23 @@
-use std::ops::{Add, Sub, Index, AddAssign, SubAssign};
+use std::ops::{Add, Sub, Index, AddAssign, SubAssign, IndexMut};
 
 pub const WIDTH: usize = 500; // window witdth
 const FOV: f32 = 3.14159 / 4.0;
 const PI: f32 = 3.14159;
 
 #[derive(Clone, Copy)]
-
 pub enum Direction {
 	Forward,
 	Backward,
 	Right,
 	Left,
+}
+
+#[derive(Clone, Copy, PartialEq)]
+pub enum MapElem {
+	Wall,
+	Key,
+	Gate,
+	Void,
 }
 
 #[derive(Copy, Clone)]
@@ -75,8 +82,7 @@ impl Vector {
 			
 			if x > 15 || y > 15 {break;}
 
-			if map[y][x][0] {
-				//println!("{}, {}", x, y);
+			if map[y][x] == MapElem::Wall {
 				let wallvec = Vector::new(x as f32,y as f32);
 				let dir = player - wallvec;
 				if dir.y > 0.0 {
@@ -99,7 +105,7 @@ impl Vector {
 						return Some([hitdata.0.x, hitdata.0.y, hitdata.1, key]);
 					}
 				}
-			} else if map[x][y][1] {
+			} else if map[x][y] == MapElem::Key {
 				key = (player - Vector::new(x as f32, y as f32)).len();
 			}
 			else if x == 0 && y == 0 {break;}
@@ -160,12 +166,13 @@ impl SubAssign for Vector {
 pub struct Player {
 	pos: Vector,
 	angle: f32,
+	has_key: bool
 }
 
 impl Player {
-	pub fn new(x: f32, y: f32, angle: f32) -> Self {
+	pub fn new(x: f32, y: f32, angle: f32, has_key: bool) -> Self {
 		let pos = Vector::new(x, y);
-		Self {pos, angle}
+		Self {pos, angle, has_key}
 	}
 
 	/// return x, y, angle
@@ -193,7 +200,7 @@ impl Player {
 		}
 	}
 
-	pub fn mv(&mut self, dir: Direction, map: Map) {
+	pub fn mv(&mut self, dir: Direction, map: &mut Map) {
 		
 		// factor with which to divide direction vector with
 		let factor = 10.0; // TODO: is this fine?
@@ -215,13 +222,18 @@ impl Player {
 			}
 		}
 		// make sure not going through walls
-		if let Some(wall) = Vector::is_hit(self.pos, movement, map) {
+		if let Some(wall) = Vector::is_hit(self.pos, movement, *map) {
 			if (self.pos - Vector::new(wall[0] as f32, wall[1] as f32)).len() < movement.len() {
 				movement = movement.scalar_div(movement.len()).scalar_mul((self.pos - Vector::new(wall[0] as f32, wall[1] as f32)).len()-0.05);
 			}
 		}
 
-// 		println!("{} {}", self.pos.x, self.pos.y);
+		let x_round = self.pos.get_x() as usize;
+		let y_round = self.pos.get_y() as usize;
+		if map[y_round][x_round] == MapElem::Key {
+			map[y_round][x_round] = MapElem::Void;
+			self.has_key = true;
+		}
 
 		self.pos += movement; 
 	}
@@ -229,7 +241,8 @@ impl Player {
 
 #[derive(Clone, Copy)]
 pub struct Map {
-	map: [[[bool; 2]; 16]; 16]
+// 	map: [[[bool; 2]; 16]; 16]
+	map: [[MapElem; 16]; 16]
 }
 
 impl Map {
@@ -239,14 +252,16 @@ impl Map {
 
 	fn make_map(arr: [&str; 16]) -> Self {
 
-		let mut map = [[[false; 2]; 16]; 16];
+		let mut map = [[MapElem::Void; 16]; 16];
 
 		for (outer, arr) in arr.iter().enumerate() {
 			for (inner, char) in arr.chars().enumerate() {
 				if char == '#' {
-					map[outer][inner][0] = true;
+					map[outer][inner] = MapElem::Wall;
 				} else if char == '@' {
-					map[outer][inner][1] = true;
+					map[outer][inner] = MapElem::Key;
+				} else if char == '$' {
+					map[outer][inner] = MapElem::Gate;
 				}
 			}
 		}
@@ -256,10 +271,16 @@ impl Map {
 }
 
 impl Index<usize> for Map {
-	type Output = [[bool; 2]; 16];
+	type Output = [MapElem; 16];
 
 	fn index(&self, index: usize) -> &Self::Output {
 		&self.map[index]
+	}
+}
+
+impl IndexMut<usize> for Map {
+	fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+		return self.map.index_mut(index);
 	}
 }
 
@@ -298,10 +319,10 @@ pub fn minimap(map: Map, player: Player) -> String {
 				buf.push('8');
 			} else {
 				buf.push(match map[row_idx][col_idx]{
-					[true, false] => '#',
-					[false, true] => '@',
-					[false, false] => '.',
-					_ => '?'
+					MapElem::Wall => '#',
+					MapElem::Key => '@',
+					MapElem::Void => '.',
+					MapElem::Gate => '$'
 				})
 			}
 			

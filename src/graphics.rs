@@ -7,14 +7,14 @@ const WIDTH: usize = stuff::WIDTH;
 const HEIGHT: usize = WIDTH / 2;
 const PI: f32 = 3.14159;
 
-pub fn render() {
+pub fn gameloop() {
 	let map_string = [
 		"################",
 		"#..............#",
 		"#.......########",
 		"#..............#",
 		"#......##......#",
-		"#......##......#",
+		"#......$#......#",
 		"#..............#",
 		"###............#",
 		"##.............#",
@@ -27,8 +27,7 @@ pub fn render() {
 		"################",
 	];
 	
-	let map = stuff::Map::new(map_string);
-	
+	let mut map = stuff::Map::new(map_string);
 	let mut buffer: Vec<u32> = vec![0; WIDTH * HEIGHT];
 
 	let mut window = Window::new(
@@ -45,7 +44,7 @@ pub fn render() {
 	window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
 
 	let angle = PI / 2.0;
-	let mut player = stuff::Player::new(2.0, 2.0, angle);
+	let mut player = stuff::Player::new(2.0, 2.0, angle, false);
 
 	while window.is_open() && !window.is_key_down(Key::Escape) {
 		
@@ -66,16 +65,16 @@ pub fn render() {
 			
 			match t {
 				Key::W => {
-					player.mv(stuff::Direction::Forward, map);
+					player.mv(stuff::Direction::Forward, &mut map);
 				},
 				Key::A => {
-					player.mv(stuff::Direction::Left, map);
+					player.mv(stuff::Direction::Left, &mut map);
 				}
 				Key::S => {
-					player.mv(stuff::Direction::Backward, map);
+					player.mv(stuff::Direction::Backward, &mut map);
 				}
 				Key::D => {
-					player.mv(stuff::Direction::Right, map);
+					player.mv(stuff::Direction::Right, &mut map);
 				}
 				_ => ()
 			}
