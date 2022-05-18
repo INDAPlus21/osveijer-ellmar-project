@@ -1,7 +1,7 @@
 use std::ops::{Add, Sub, Index, AddAssign, SubAssign, IndexMut};
 
 pub const WIDTH: usize = 500; // window witdth
-const FOV: f32 = 3.14159 / 4.0;
+pub const FOV: f32 = 3.14159 / 4.0;
 const PI: f32 = 3.14159;
 
 #[derive(Clone, Copy)]
@@ -16,7 +16,8 @@ pub enum Direction {
 pub enum MapElem {
 	Wall,
 	Key,
-	Gate,
+	GateClosed,
+	GateOpened,
 	Void,
 }
 
@@ -69,9 +70,10 @@ impl Vector {
 		a.x * b.x + a.y * b.y
 	}
 	
-	fn is_hit(player: Self, angle: Self, map: Map) -> Option<[f32; 4]> {
+	fn is_hit(player: Self, angle: Self, map: Map) -> Option<[f32; 5]> {
 		let mut step: f32 = 0.0;
 		let mut key: f32 = 0.0;
+		let mut gate: f32 = 0.0;
 
 		loop {
 			
@@ -86,27 +88,58 @@ impl Vector {
 				let wallvec = Vector::new(x as f32,y as f32);
 				let dir = player - wallvec;
 				if dir.y > 0.0 {
-					if let Some(hitdata) = Vector::intersect(Vector::new(0.0,1.0), wallvec + Vector::new(0.0, 0.5), angle, player) {
-						return Some([hitdata.0.x, hitdata.0.y, hitdata.1, key]);
+					if let Some(hitdata) = Vector::intersect(Vector::new(0.0,1.0), wallvec + Vector::new(0.0, 0.5), angle, player, MapElem::Wall) {
+						return Some([hitdata.0.x, hitdata.0.y, hitdata.1, key, gate]);
 					}
 				}
 				else {
-					if let Some(hitdata) = Vector::intersect(Vector::new(0.0,-1.0), wallvec + Vector::new(0.0, -0.5), angle, player) {
-						return Some([hitdata.0.x, hitdata.0.y, hitdata.1, key]);
+					if let Some(hitdata) = Vector::intersect(Vector::new(0.0,-1.0), wallvec + Vector::new(0.0, -0.5), angle, player, MapElem::Wall) {
+						return Some([hitdata.0.x, hitdata.0.y, hitdata.1, key, gate]);
 					}
 				}
 				if dir.x < 0.0 {
-					if let Some(hitdata) = Vector::intersect(Vector::new(-1.0,0.0), wallvec + Vector::new(-0.5, 0.0), angle, player) {
-						return Some([hitdata.0.x, hitdata.0.y, hitdata.1, key]);
+					if let Some(hitdata) = Vector::intersect(Vector::new(-1.0,0.0), wallvec + Vector::new(-0.5, 0.0), angle, player, MapElem::Wall) {
+						return Some([hitdata.0.x, hitdata.0.y, hitdata.1, key, gate]);
 					}
 				}
 				else {
-					if let Some(hitdata) = Vector::intersect(Vector::new(1.0,0.0), wallvec + Vector::new(0.5, 0.0), angle, player) {
-						return Some([hitdata.0.x, hitdata.0.y, hitdata.1, key]);
+					if let Some(hitdata) = Vector::intersect(Vector::new(1.0,0.0), wallvec + Vector::new(0.5, 0.0), angle, player, MapElem::Wall) {
+						return Some([hitdata.0.x, hitdata.0.y, hitdata.1, key, gate]);
 					}
 				}
-			} else if map[x][y] == MapElem::Key {
-				key = (player - Vector::new(x as f32, y as f32)).len();
+			} else if map[x][y] == MapElem::Key && key == 0.0 {
+				let keypos = Vector::new(x as f32, y as f32);
+				if let Some(hitdata) = Vector::intersect(player-keypos,  keypos, angle, player, MapElem::Key) {
+					key = (player - Vector::new(hitdata.0.x, hitdata.0.y)).len();
+				}
+			} else if map[x][y] == MapElem::GateClosed && gate == 0.0{
+				let gatepos = Vector::new(x as f32, y as f32);
+				let dir = player - gatepos;
+				if dir.y > 0.0 {
+					if let Some(hitdata) = Vector::intersect(Vector::new(0.0,1.0), gatepos + Vector::new(0.0, 0.5), angle, player, MapElem::GateClosed) {
+						gate = (player - Vector::new(hitdata.0.x, hitdata.0.y)).len();
+						continue;
+					}
+				}
+				else {
+					if let Some(hitdata) = Vector::intersect(Vector::new(0.0,-1.0), gatepos + Vector::new(0.0, -0.5), angle, player, MapElem::GateClosed) {
+						gate = (player - Vector::new(hitdata.0.x, hitdata.0.y)).len();
+						continue;
+					}
+				}
+				if dir.x < 0.0 {
+					if let Some(hitdata) = Vector::intersect(Vector::new(-1.0,0.0), gatepos + Vector::new(-0.5, 0.0), angle, player, MapElem::GateClosed) {
+						gate = (player - Vector::new(hitdata.0.x, hitdata.0.y)).len();
+						continue;
+					}
+				}
+				else {
+					if let Some(hitdata) = Vector::intersect(Vector::new(1.0,0.0), gatepos + Vector::new(0.5, 0.0), angle, player, MapElem::GateClosed) {
+						gate = (player - Vector::new(hitdata.0.x, hitdata.0.y)).len();
+						continue;
+					}
+				}
+				gate = -1.0;
 			}
 			else if x == 0 && y == 0 {break;}
 			step += 0.05
@@ -114,15 +147,31 @@ impl Vector {
 		None
 	}
 
-	fn intersect(normal: Self, center: Self, angle: Self, player: Self) -> Option<(Self, f32)> {
+	fn intersect(normal: Self, center: Self, angle: Self, player: Self, elem: MapElem) -> Option<(Self, f32)> {
 		let denominator = Vector::dot(normal, angle);
 
 		if denominator != 0.0 {
 			let t = (Vector::dot(normal, center) - Vector::dot(normal, player)) / denominator;
 			let p = player + angle.scalar_mul(t);
-			if (p - center).len() < 0.5 {
-				return Some((p, (denominator/(normal.len()*angle.len())).acos()))
+			match elem {
+				MapElem::Wall => {
+					if (p - center).len() < 0.5 {
+						return Some((p, normal.x.abs()));
+					}
+				},
+				MapElem::Key => {
+					if (p - center).len() < 0.1 {
+						return Some((p, normal.x.abs()));
+					}
+				},
+				MapElem::GateClosed => {
+					if ((p - center).len() * 10.0).floor() as usize % 2 == 0 && (p - center).len() < 0.5 {
+						return Some((p, normal.x.abs()));
+					}
+				},
+				_ => ()
 			}
+			
 		}
 		None
 	}
@@ -233,7 +282,7 @@ impl Player {
 		if map[y_round][x_round] == MapElem::Key {
 			map[y_round][x_round] = MapElem::Void;
 			self.has_key = true;
-		}
+		} 
 
 		self.pos += movement; 
 	}
@@ -261,7 +310,7 @@ impl Map {
 				} else if char == '@' {
 					map[outer][inner] = MapElem::Key;
 				} else if char == '$' {
-					map[outer][inner] = MapElem::Gate;
+					map[outer][inner] = MapElem::GateClosed;
 				}
 			}
 		}
@@ -284,8 +333,8 @@ impl IndexMut<usize> for Map {
 	}
 }
 
-pub fn render(player: Player, map: Map) -> [[f32;3]; WIDTH] {
-	let mut result = [[0.0;3]; WIDTH];
+pub fn render(player: Player, map: Map) -> [[f32;4]; WIDTH] {
+	let mut result = [[0.0;4]; WIDTH];
 	let step = FOV / (WIDTH as f32);
 
 	let (x, y, angle) = player.get_pos();
@@ -296,9 +345,9 @@ pub fn render(player: Player, map: Map) -> [[f32;3]; WIDTH] {
 	for idx in 0..WIDTH {
 		let angle_vec = Vector::from_angle(angle_current);
 		if let Some(hit) = Vector::is_hit(player_vec, angle_vec, map) {
-			result[idx] = [(player_vec - Vector::new(hit[0], hit[1])).len(), hit[2], hit[3]];
+			result[idx] = [(player_vec - Vector::new(hit[0], hit[1])).len(), hit[2], hit[3], hit[4]];
 		} else {
-			result[idx] = [100.0,0.0,0.0];
+			result[idx] = [100.0,0.0,0.0,0.0];
 		}
 		angle_current -= step;
 	}
@@ -322,7 +371,8 @@ pub fn minimap(map: Map, player: Player) -> String {
 					MapElem::Wall => '#',
 					MapElem::Key => '@',
 					MapElem::Void => '.',
-					MapElem::Gate => '$'
+					MapElem::GateClosed => '$',
+					MapElem::GateOpened => '€'
 				})
 			}
 			
