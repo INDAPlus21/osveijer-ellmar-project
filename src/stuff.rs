@@ -1,6 +1,6 @@
 use std::ops::{Add, Sub, Index, AddAssign, SubAssign, IndexMut};
 
-pub const WIDTH: usize = 500; // window witdth
+pub const WIDTH: usize = 1000; // window witdth
 pub const FOV: f32 = 3.14159 / 4.0;
 const PI: f32 = 3.14159;
 
@@ -328,7 +328,7 @@ impl Player {
 	pub fn mv(&mut self, dir: Direction, map: &mut Map) {
 		
 		// factor with which to divide direction vector with
-		let factor = 10.0;
+		let factor = 16.0;
 		// movement Vector
 		let mut movement: Vector = Vector::new(0.0,0.0);
 		// get movement
