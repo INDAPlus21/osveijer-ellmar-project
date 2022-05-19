@@ -24,3 +24,6 @@ Graphics and movement as of 4th may:
 
 6th may, graphics improved, collision mechanics added:
 ![](img/may_6.gif)
+
+19th may: graphics further imroved. Key and locking/opening gate added.
+![](img/may-19.gif)
