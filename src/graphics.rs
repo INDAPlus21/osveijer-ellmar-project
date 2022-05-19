@@ -89,16 +89,16 @@ pub fn gameloop() {
 		let sky = from_u8_rgb(125, 150, 255);
 		let key = from_u8_rgb(200, 200, 20);
 		let wall = from_u8_rgb(70, 120, 175);
-		let gate = from_u8_rgb(250, 100, 100);
+		let gate = from_u8_rgb(250, 50, 50);
 
 		for (idx, pixel) in buffer.iter_mut().enumerate() {
 			let column = idx % WIDTH;
 			let row = (idx - (idx % HEIGHT)) / HEIGHT;
 
 			let dat = data[column];
-			if dat[3] != 0.0 && dat[3] != -1.0 && HEIGHT as f32 / 2.0 - (((1.0/dat[3]).atan() * HEIGHT as f32 * 2.0)/stuff::FOV) < row as f32 && HEIGHT as f32 / 2.0 + (((1.0/dat[3]).atan() * HEIGHT as f32 * 2.0)/stuff::FOV) > row as f32 {
+			if dat[3] > 0.0 && dat[4] == 1.0 && HEIGHT as f32 / 2.0 - (((1.0/dat[3]).atan() * HEIGHT as f32 * 2.0)/stuff::FOV) < row as f32 && HEIGHT as f32 / 2.0 + (((1.0/dat[3]).atan() * HEIGHT as f32 * 2.0)/stuff::FOV) > row as f32 {
 				*pixel = gate;
-			} else if dat[2] != 0.0 && HEIGHT as f32 / 2.0 - (((0.2/dat[2]).atan() * HEIGHT as f32 * 2.0)/stuff::FOV) < row as f32 && HEIGHT as f32 / 2.0 + (((0.2/dat[2]).atan() * HEIGHT as f32 * 2.0)/stuff::FOV) > row as f32 {
+			} else if dat[2] > 0.0 && HEIGHT as f32 / 2.0 - (((0.2/dat[2]).atan() * HEIGHT as f32 * 2.0)/stuff::FOV) < row as f32 && HEIGHT as f32 / 2.0 + (((0.2/dat[2]).atan() * HEIGHT as f32 * 2.0)/stuff::FOV) > row as f32 {
 				*pixel = key;
 			} else if dat[0] < 15.0 && HEIGHT as f32 / 2.0 - (((1.0/dat[0]).atan() * HEIGHT as f32 * 2.0)/stuff::FOV) < row as f32 && HEIGHT as f32 / 2.0 + (((1.0/dat[0]).atan() * HEIGHT as f32 * 2.0)/stuff::FOV) > row as f32 {
 				*pixel = dat[1] as u32 * 2000 + wall;
