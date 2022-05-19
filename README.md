@@ -1,6 +1,8 @@
 # osveijer-ellmar-project
 A first person game made in rust and inspired by the original doom.
 
+[architecture flowchart](https://whimsical.com/VFpwKeySJrwh6SNxTivbyt).
+
 ### What will be included
 
 The project will include a graphics engine and some kind of movement system. Once this is completed further functions can be added such as shooting, enemies, different leveles or different objectives such as gathering keys. 
