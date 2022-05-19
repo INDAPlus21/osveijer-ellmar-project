@@ -93,11 +93,16 @@ impl Vector {
 			
 			if x > 15 || y > 15 {break;}
 
-
 			match map[y][x] {
 				MapElem::Wall => {
 					let wallvec = Vector::new(x as f32,y as f32);
 					let dir = player - wallvec;
+
+					let (x_1, x_2): (f32, f32) = if dir.x > 0.0 {
+						(1.0, 0.5)
+					} else {
+						(-1.0, -0.5)
+					};
 
 					let (y_1, y_2): (f32, f32) = if dir.y > 0.0 {
 						(1.0, 0.5)
@@ -107,15 +112,8 @@ impl Vector {
 
 					if let Some(hitdata) = Vector::intersect(Vector::new(0.0,y_1), wallvec + Vector::new(0.0, y_2), angle, player, MapElem::Wall) {
 						return Some([hitdata.0.x, hitdata.0.y, hitdata.1, key, gate, onbar]);
-					}
-
-					let (x_1, x_2): (f32, f32) = if dir.x > 0.0 {
-						(1.0, 0.5)
-					} else {
-						(-1.0, -0.5)
-					};
-
-					if let Some(hitdata) = Vector::intersect(Vector::new(x_1, 0.0), wallvec + Vector::new(x_2, 0.0), angle, player, MapElem::Wall) {
+					} 
+					else if let Some(hitdata) = Vector::intersect(Vector::new(x_1, 0.0), wallvec + Vector::new(x_2, 0.0), angle, player, MapElem::Wall) {
 						return Some([hitdata.0.x, hitdata.0.y, hitdata.1, key, gate, onbar]);
 					}
 				},
@@ -135,34 +133,31 @@ impl Vector {
 					if gate == 0.0 {
 						let gatepos = Vector::new(x as f32, y as f32);
 						let dir = player - gatepos;
-						if dir.y > 0.0 {
-							if let Some(hitdata) = Vector::intersect(Vector::new(0.0,1.0), gatepos + Vector::new(0.0, 0.4), angle, player, MapElem::GateClosed) {
-								gate = (player - Vector::new(hitdata.0.x, hitdata.0.y)).len();
-								onbar = hitdata.1;
-								continue;
-							}
+
+						let (x_1, x_2): (f32, f32) = if dir.x > 0.0 {
+							(1.0, 0.4)
+						} else {
+							(-1.0, -0.4)
+						};
+
+						let (y_1, y_2): (f32, f32) = if dir.y > 0.0 {
+							(1.0, 0.4)
+						} else {
+							(-1.0, -0.4)
+						};
+
+						if let Some(hitdata) = Vector::intersect(Vector::new(0.0, y_1), gatepos + Vector::new(0.0, y_2), angle, player, MapElem::GateClosed) {
+							gate = (player - Vector::new(hitdata.0.x, hitdata.0.y)).len();
+							onbar = hitdata.1;
+							continue;
 						}
-						else {
-							if let Some(hitdata) = Vector::intersect(Vector::new(0.0,-1.0), gatepos + Vector::new(0.0, -0.4), angle, player, MapElem::GateClosed) {
-								gate = (player - Vector::new(hitdata.0.x, hitdata.0.y)).len();
-								onbar = hitdata.1;
-								continue;
-							}
+
+						if let Some(hitdata) = Vector::intersect(Vector::new(x_1,0.0), gatepos + Vector::new(x_2, 0.0), angle, player, MapElem::GateClosed) {
+							gate = (player - Vector::new(hitdata.0.x, hitdata.0.y)).len();
+							onbar = hitdata.1;
+							continue;
 						}
-						if dir.x < 0.0 {
-							if let Some(hitdata) = Vector::intersect(Vector::new(-1.0,0.0), gatepos + Vector::new(-0.4, 0.0), angle, player, MapElem::GateClosed) {
-								gate = (player - Vector::new(hitdata.0.x, hitdata.0.y)).len();
-								onbar = hitdata.1;
-								continue;
-							}
-						}
-						else {
-							if let Some(hitdata) = Vector::intersect(Vector::new(1.0,0.0), gatepos + Vector::new(0.4, 0.0), angle, player, MapElem::GateClosed) {
-								gate = (player - Vector::new(hitdata.0.x, hitdata.0.y)).len();
-								onbar = hitdata.1;
-								continue;
-							}
-						}
+
 						gate = -1.0;
 					}
 				},
@@ -171,33 +166,27 @@ impl Vector {
 					if gate == 0.0 {
 						let gatepos = Vector::new(x as f32, y as f32);
 						let dir = player - gatepos;
-						if dir.y > 0.0 {
-							if let Some(hitdata) = Vector::intersect(Vector::new(0.0,1.0), gatepos + Vector::new(0.0, 0.4), angle, player, MapElem::GateOpened) {
-								gate = (player - Vector::new(hitdata.0.x, hitdata.0.y)).len();
-								onbar = 1.0;
-								continue;
-							}
-						}
-						else {
-							if let Some(hitdata) = Vector::intersect(Vector::new(0.0,-1.0), gatepos + Vector::new(0.0, -0.4), angle, player, MapElem::GateOpened) {
-								gate = (player - Vector::new(hitdata.0.x, hitdata.0.y)).len();
-								onbar = 1.0;
-								continue;
-							}
-						}
-						if dir.x < 0.0 {
-							if let Some(hitdata) = Vector::intersect(Vector::new(-1.0,0.0), gatepos + Vector::new(-0.4, 0.0), angle, player, MapElem::GateOpened) {
-								gate = (player - Vector::new(hitdata.0.x, hitdata.0.y)).len();
-								onbar = 1.0;
-								continue;
-							}
-						}
-						else {
-							if let Some(hitdata) = Vector::intersect(Vector::new(1.0,0.0), gatepos + Vector::new(0.4, 0.0), angle, player, MapElem::GateOpened) {
-								gate = (player - Vector::new(hitdata.0.x, hitdata.0.y)).len();
-								onbar = 1.0;
-								continue;
-							}
+
+						let (x_1, x_2): (f32, f32) = if dir.x > 0.0 {
+							(1.0, 0.5)
+						} else {
+							(-1.0, -0.5)
+						};
+
+						let (y_1, y_2): (f32, f32) = if dir.y > 0.0 {
+							(1.0, 0.5)
+						} else {
+							(-1.0, -0.5)
+						};
+
+						if let Some(hitdata) = Vector::intersect(Vector::new(0.0,y_1), gatepos + Vector::new(0.0, y_2), angle, player, MapElem::GateOpened) {
+							gate = (player - Vector::new(hitdata.0.x, hitdata.0.y)).len();
+							onbar = 1.0;
+							continue;
+						} else if let Some(hitdata) = Vector::intersect(Vector::new(x_1, 0.0), gatepos + Vector::new(x_2, 0.0), angle, player, MapElem::GateOpened) {
+							gate = (player - Vector::new(hitdata.0.x, hitdata.0.y)).len();
+							onbar = 1.0;
+							continue;
 						}
 						gate = -1.0;
 					}
