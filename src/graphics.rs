@@ -55,7 +55,7 @@ pub fn gameloop() {
 		for t in keys {
 			match t {
 				Key::Left => {
-					player.rotate(stuff::Direction::Left, 0.1); // TODO: is angle fine?
+					player.rotate(stuff::Direction::Left, 0.1);
 				},
 				Key::Right => {
 					player.rotate(stuff::Direction::Right, 0.1);

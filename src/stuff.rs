@@ -4,6 +4,7 @@ pub const WIDTH: usize = 500; // window witdth
 pub const FOV: f32 = 3.14159 / 4.0;
 const PI: f32 = 3.14159;
 
+/// player / camera movement
 #[derive(Clone, Copy)]
 pub enum Direction {
 	Forward,
@@ -12,6 +13,7 @@ pub enum Direction {
 	Left,
 }
 
+/// elements used in building maps
 #[derive(Clone, Copy, PartialEq)]
 pub enum MapElem {
 	Wall,
@@ -21,6 +23,7 @@ pub enum MapElem {
 	Void,
 }
 
+/// # 2d vectors for used for graphics / coordinates
 #[derive(Copy, Clone)]
 struct Vector {
 	x: f32,
@@ -40,7 +43,9 @@ impl Vector {
 		self.y
 	}
 
-	// create vector of unit length representing angle in radians ( 0 = 03:00, pi = 09:00)
+	/// create vector of unit length representing angle in radians
+	/// * 0 rad => pointing positive x
+	/// * (pi / 2) rad => pointing negative y
 	fn from_angle(angle: f32) -> Self {
 		Self {
 			x: angle.cos(),
@@ -70,6 +75,7 @@ impl Vector {
 		a.x * b.x + a.y * b.y
 	}
 	
+	/// Determine if a ray shot from the player at an angle hit's something
 	fn is_hit(player: Self, angle: Self, map: Map) -> Option<[f32; 6]> {
 		let mut step: f32 = 0.0;
 		let mut key: f32 = 0.0;
@@ -260,6 +266,12 @@ impl SubAssign for Vector {
 	}
 }
 
+/// # Reperesentation of the player
+/// 
+/// **fields:**
+/// * pos: x, and y coordinates, represented as Vector
+/// * angle: camera angle in radians. 0 rad => pointing to positive x, pi / 2 rad => pointing to negative y
+/// * has_key: used to determine if player has obtained MapElem::Key
 #[derive(Clone, Copy)]
 pub struct Player {
 	pos: Vector,
@@ -268,6 +280,7 @@ pub struct Player {
 }
 
 impl Player {
+	/// angle is in radians (0 => pointing positive x, pi/2 => negative y)
 	pub fn new(x: f32, y: f32, angle: f32, has_key: bool) -> Self {
 		let pos = Vector::new(x, y);
 		Self {pos, angle, has_key}
@@ -278,6 +291,10 @@ impl Player {
 		(self.pos.get_x(), self.pos.get_y(), self.angle)
 	}
 	
+	/// rotate the player
+	/// **arg:s**
+	/// * dir: Direction::Left or Direction::Right only
+	/// * angle: radians (0 => pointing positive x, pi/2 => negative y)
 	pub fn rotate(&mut self, dir: Direction, angle: f32) {
 		match dir {
 			Direction::Left => {
@@ -298,10 +315,11 @@ impl Player {
 		}
 	}
 
+	/// Move the player by a small distance
 	pub fn mv(&mut self, dir: Direction, map: &mut Map) {
 		
 		// factor with which to divide direction vector with
-		let factor = 10.0; // TODO: is this fine?
+		let factor = 10.0;
 		// movement Vector
 		let mut movement: Vector = Vector::new(0.0,0.0);
 		// get movement
@@ -330,7 +348,6 @@ impl Player {
 
 		let x_round = self.pos.get_x() as usize;
 		let y_round = self.pos.get_y() as usize;
-		//println!("{} {}", x_round, y_round);
 		if map[y_round][x_round] == MapElem::Key {
 			map[y_round][x_round] = MapElem::Void;
 			self.has_key = true;
@@ -342,13 +359,21 @@ impl Player {
 	}
 }
 
+/// # Struct representing map
+/// * the map is made from Mapelem.
+/// * the map has a size of 16x16
 #[derive(Clone, Copy)]
 pub struct Map {
-// 	map: [[[bool; 2]; 16]; 16]
 	map: [[MapElem; 16]; 16]
 }
 
 impl Map {
+	/// Create map from string representation
+	/// * '.' => MapElem::Void
+	/// * '#' => MapElem::Wall
+	/// * '@' => MapElem::Key
+	/// * '€' => MapElem::GateOpened
+	/// * '$' => MapElem::GateClosed
 	pub fn new(arr: [&str; 16]) -> Self {
 		Self::make_map(arr)
 	}
@@ -359,16 +384,15 @@ impl Map {
 
 		for (outer, arr) in arr.iter().enumerate() {
 			for (inner, char) in arr.chars().enumerate() {
-				if char == '#' {
-					map[outer][inner] = MapElem::Wall;
-				} else if char == '@' {
-					map[outer][inner] = MapElem::Key;
-				} else if char == '$' {
-					map[outer][inner] = MapElem::GateClosed;
-				}
+				map[outer][inner] = match char {
+					'#' => MapElem::Wall,
+					'@' => MapElem::Key,
+					'$' => MapElem::GateClosed,
+					'€' => MapElem::GateOpened,
+					_ => MapElem::Void
+				};
 			}
 		}
-
 		Self {map}
 	}
 }
@@ -409,6 +433,13 @@ pub fn render(player: Player, map: Map) -> [[f32;5]; WIDTH] {
 }
 
 
+	/// Create string representation from map, and draw player
+	/// * MapElem::Void => '.'
+	/// * MapElem::Wall => '#'
+	/// * MapElem::Key => '@'
+	/// * MapElem::GateOpened => '€'
+	/// * MapElem::GateClosed => '$'
+	/// * Player => '8'
 pub fn minimap(map: Map, player: Player) -> String {
 	let (x, y, _) = player.get_pos();
 	let x: usize = x.round() as usize;
