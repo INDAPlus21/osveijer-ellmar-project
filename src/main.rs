@@ -6,6 +6,18 @@ const WIDTH: usize = stuff::WIDTH;
 const HEIGHT: usize = WIDTH / 2;
 const PI: f32 = 3.14159;
 
+const CLR_FLOOR: u32 = from_u8_rgb(150, 150, 150);
+const CLR_SKY: u32 = from_u8_rgb(125, 150, 255);
+const CLR_KEY: u32 = from_u8_rgb(200, 200, 20);
+const CLR_WALL: u32 = from_u8_rgb(70, 120, 175);
+const CLR_GATE: u32 = from_u8_rgb(250, 50, 50);
+
+// code for conversion from rgb values to minifb colors taken from the minifb documentation
+const fn from_u8_rgb(r: u8, g: u8, b: u8) -> u32 {
+	let (r, g, b) = (r as u32, g as u32, b as u32);
+	(r << 16) | (g << 8) | b
+}
+
 pub fn main() {
 	let map_string = [
 		"################",
@@ -83,12 +95,6 @@ pub fn main() {
 
 
 		let data = stuff::render(player, map);
-		
-		let floor = from_u8_rgb(150, 150, 150);
-		let sky = from_u8_rgb(125, 150, 255);
-		let key = from_u8_rgb(200, 200, 20);
-		let wall = from_u8_rgb(70, 120, 175);
-		let gate = from_u8_rgb(250, 50, 50);
 
 		for (idx, pixel) in buffer.iter_mut().enumerate() {
 			let column = idx % WIDTH;
@@ -96,15 +102,15 @@ pub fn main() {
 
 			let dat = data[column];
 			if dat[3] > 0.0 && dat[4] == 1.0 && HEIGHT as f32 / 2.0 - (((1.0/dat[3]).atan() * HEIGHT as f32 * 2.0)/stuff::FOV) < row as f32 && HEIGHT as f32 / 2.0 + (((1.0/dat[3]).atan() * HEIGHT as f32 * 2.0)/stuff::FOV) > row as f32 {
-				*pixel = gate;
+				*pixel = CLR_GATE;
 			} else if dat[2] > 0.0 && HEIGHT as f32 / 2.0 - (((0.2/dat[2]).atan() * HEIGHT as f32 * 2.0)/stuff::FOV) < row as f32 && HEIGHT as f32 / 2.0 + (((0.2/dat[2]).atan() * HEIGHT as f32 * 2.0)/stuff::FOV) > row as f32 {
-				*pixel = key;
+				*pixel = CLR_KEY;
 			} else if dat[0] < 15.0 && HEIGHT as f32 / 2.0 - (((1.0/dat[0]).atan() * HEIGHT as f32 * 2.0)/stuff::FOV) < row as f32 && HEIGHT as f32 / 2.0 + (((1.0/dat[0]).atan() * HEIGHT as f32 * 2.0)/stuff::FOV) > row as f32 {
-				*pixel = dat[1] as u32 * 2000 + wall;
+				*pixel = dat[1] as u32 * 2000 + CLR_WALL;
 			} else if HEIGHT / 2 < row {
-				*pixel = floor;
+				*pixel = CLR_FLOOR;
 			} else {
-				*pixel = sky;
+				*pixel = CLR_SKY;
 			}
 		}
 
@@ -115,8 +121,3 @@ pub fn main() {
 	}
 }
 
-// code for conversion from rgb values to minifb colors taken from the minifb documentation
-fn from_u8_rgb(r: u8, g: u8, b: u8) -> u32 {
-    let (r, g, b) = (r as u32, g as u32, b as u32);
-    (r << 16) | (g << 8) | b
-}
