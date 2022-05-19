@@ -21,6 +21,7 @@ pub enum MapElem {
 	GateClosed,
 	GateOpened,
 	Void,
+	Exit,
 }
 
 /// # 2d vectors for used for graphics / coordinates
@@ -77,6 +78,8 @@ impl Vector {
 	
 	/// Determine if a ray shot from a coordinate: player, with
 	/// an angle: angle hits anything on the map.
+	/// 
+	/// return: [x, y, wall_orientation?, key, gate, onbar?]
 	fn is_hit(player: Self, angle: Self, map: Map) -> Option<[f32; 6]> {
 		let step: f32 = 0.01; // length increment size
 		let mut length: f32 = 0.0; // length of ray
@@ -325,7 +328,8 @@ impl Player {
 	}
 
 	/// Move the player by a small distance
-	pub fn mv(&mut self, dir: Direction, map: &mut Map) {
+	/// return true, if the game is over
+	pub fn mv(&mut self, dir: Direction, map: &mut Map) -> bool {
 		
 		// factor with which to divide direction vector with
 		let factor = 16.0;
@@ -357,14 +361,25 @@ impl Player {
 
 		let x_round = self.pos.get_x() as usize;
 		let y_round = self.pos.get_y() as usize;
-		if map[y_round][x_round] == MapElem::Key {
-			map[y_round][x_round] = MapElem::Void;
-			self.has_key = true;
-		} else if map[y_round][x_round] == MapElem::GateClosed && self.has_key {
-			map[y_round][x_round] = MapElem::GateOpened;
+		
+		match map[y_round][x_round] {
+			MapElem::Key => {
+				map[y_round][x_round] = MapElem::Void;
+				self.has_key = true;
+			},
+			MapElem::GateClosed => {
+				if self.has_key {
+					map[y_round][x_round] = MapElem::GateOpened;
+				}
+			},
+			MapElem::Exit => {
+				return true;
+			}
+			
+			_ => (),
 		}
-
 		self.pos += movement; 
+		false
 	}
 }
 
@@ -398,6 +413,7 @@ impl Map {
 					'@' => MapElem::Key,
 					'$' => MapElem::GateClosed,
 					'€' => MapElem::GateOpened,
+					'E' => MapElem::Exit,
 					_ => MapElem::Void
 				};
 			}
@@ -420,6 +436,9 @@ impl IndexMut<usize> for Map {
 	}
 }
 
+/// "raytracer"
+/// 
+/// return: [[distance, wall-orientation?, key, gate, onbar?]; WIDTH]
 pub fn render(player: Player, map: Map) -> [[f32;5]; WIDTH] {
 	let mut result = [[0.0;5]; WIDTH];
 	let step = FOV / (WIDTH as f32);
@@ -466,7 +485,8 @@ pub fn minimap(map: Map, player: Player) -> String {
 					MapElem::Key => '@',
 					MapElem::Void => '.',
 					MapElem::GateClosed => '$',
-					MapElem::GateOpened => '€'
+					MapElem::GateOpened => '€',
+					MapElem::Exit => 'E',
 				})
 			}
 			

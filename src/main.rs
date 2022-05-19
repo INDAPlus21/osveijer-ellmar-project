@@ -23,9 +23,9 @@ pub fn main() {
 		"################",
 		"#..............#",
 		"#.......########",
-		"#..............#",
-		"#......##......#",
-		"#......$#......#",
+		"#.....###......#",
+		"#.....#E#......#",
+		"#.....#$#......#",
 		"#..............#",
 		"###............#",
 		"##.............#",
@@ -56,8 +56,9 @@ pub fn main() {
 
 	let angle = PI / 2.0;
 	let mut player = stuff::Player::new(2.0, 2.0, angle, false);
+	let mut exit = false;
 
-	while window.is_open() && !window.is_key_down(Key::Escape) {
+	while window.is_open() && !window.is_key_down(Key::Escape) && !exit{
 		
 		let keys = window.get_keys();
 
@@ -74,20 +75,24 @@ pub fn main() {
 				_ => {()}
 			}
 			
-			match t {
+			let dir: Option<stuff::Direction> = match t {
 				Key::W => {
-					player.mv(stuff::Direction::Forward, &mut map);
+					Some(stuff::Direction::Forward)
 				},
 				Key::A => {
-					player.mv(stuff::Direction::Left, &mut map);
+					Some(stuff::Direction::Left)
 				}
 				Key::S => {
-					player.mv(stuff::Direction::Backward, &mut map);
+					Some(stuff::Direction::Backward)
 				}
 				Key::D => {
-					player.mv(stuff::Direction::Right, &mut map);
+					Some(stuff::Direction::Right)
 				}
-				_ => ()
+				_ => (None)
+			};
+
+			if dir.is_some() {
+				exit = player.mv(dir.unwrap(), &mut map);
 			}
 		}
 
